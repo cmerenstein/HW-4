@@ -1,0 +1,70 @@
+---
+title: "VT_census"
+runtime: shiny
+output: html_document
+---
+
+
+To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+
+## Inputs and Outputs
+
+
+```{r, echo=FALSE}
+
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(tidyr))
+suppressPackageStartupMessages(library(knitr))
+# For US county and state maps
+suppressPackageStartupMessages(library(maps))
+# For loading in shapefiles
+suppressPackageStartupMessages(library(rgdal))
+suppressPackageStartupMessages(library(maptools))
+# For interactive maps
+suppressPackageStartupMessages(library(leaflet))
+
+inputPanel(
+  selectInput("race", label = "Percent Race:",
+              choices = c("White", "Black", "Asian", "Pacific", "Other", "Two_or_More"), selected = "pBlack")
+  
+)
+
+renderLeaflet({
+  shapefile_name <- paste(getwd(), "/VT_census_tracts/tl_2015_50_tract.shp", sep="")
+    VT <- readOGR(shapefile_name, layer = "tl_2015_50_tract", verbose = FALSE)
+    
+    VT_race <- read.csv("vt_race.csv")
+    
+    VT_race$FIPS = as.factor(VT_race$FIPS)
+    
+    VT@data <- left_join(VT@data, VT_race, by=c("GEOID" = "FIPS"))
+    
+    
+      switch(input$race,
+        "White" = leaflet(VT) %>%
+          addTiles() %>%
+          addPolygons(color = ~colorQuantile("YlOrRd", VT$pWhite)(pWhite), weight=2, fillOpacity = 0.5),
+        "Black" = leaflet(VT) %>%
+          addTiles() %>%
+          addPolygons(color = ~colorQuantile("YlOrRd", VT$pBlack)(pBlack), weight=2, fillOpacity = 0.5),
+        "Asian" = leaflet(VT) %>%
+          addTiles() %>%
+          addPolygons(color = ~colorQuantile("YlOrRd", VT$pAsian)(pAsian), weight=2, fillOpacity = 0.5),
+        "Pacific" = leaflet(VT) %>%
+          addTiles() %>%
+          addPolygons(color = ~colorQuantile("YlOrRd", VT$pPacific)(pPacific), weight=2, fillOpacity = 0.5),
+        #pacific gets an error, because of how the quantile does beaks
+        "Other" = leaflet(VT) %>%
+          addTiles() %>%
+          addPolygons(color = ~colorQuantile("YlOrRd", VT$pOther)(pOther), weight=2, fillOpacity = 0.5),
+        "Two_or_More"= leaflet(VT) %>%
+          addTiles() %>%
+          addPolygons(color = ~colorQuantile("YlOrRd", VT$pTwo_or_More)(pTwo_or_More), weight=2, fillOpacity = 0.5),
+        "Native" = leaflet(VT) %>%
+          addTiles() %>%
+          addPolygons(color = ~colorQuantile("YlOrRd", VT$pNaive)(pNative), weight=2, fillOpacity = 0.5),
+      )
+})
+```
+
