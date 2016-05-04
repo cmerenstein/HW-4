@@ -156,10 +156,11 @@ VT@data <- left_join(VT@data, VT_race, by=c("GEOID" = "FIPS"))
 
 leaflet(VT) %>%
   addTiles() %>% 
+  addPolylines(color="black", weight=1) %>% 
   addPolygons(color = ~colorQuantile("YlOrRd", VT$pBlack)(pBlack), weight=2, fillOpacity = 0.5)
 
 ```
-
+> the lines does make it easier to see.
 
 ### Write-Up
 
